@@ -21,6 +21,9 @@ The model implementation can be found in the folder [/eqCLR](/eqCLR/).
 
 The training and evaluation setup of eqCLR can be found [here](eqclr.py) for eqCLR and the corresponding comparison using conventional SimCLR [here](simclr.py).
 
+To use the hue-equivariance models, the modyfied escnn library must be used ([link](https://github.com/NavidadK/escnn/tree/ssl)).
+
+
 # Reproducability of Results
 In the thesis, we tested four different datasets. Namely, we used the BloodMNIST, PathMNIST and DermaMNIST datasets from the [MedMNIST](https://medmnist.com/) dataset collection and the the [CIFAR10](https://docs.pytorch.org/vision/main/generated/torchvision.datasets.CIFAR10.html) dataset. Those need to be downloaded in a separate /data folder and the needed /results folder need to be initialized to save the results.
 

@@ -515,6 +515,12 @@ class EqResNet18(nn.Module):
 class EqResNet_hue(nn.Module):
     def __init__(self, N=4, in_channels=3, layers=[2, 2, 2, 2], block='basic', eq_blocks=4, projector_hidden_size=1024, n_classes=128, maxpool=True, adjust_channels='keep_param'):
         super().__init__()
+        """
+        This model implements a ResNet architecture with equivariance to hue rotations in the HSV color space. The symmetry group is defined as hueOnR2(N), which corresponds to cyclic rotations of the hue channel. 
+        The model consists of an initial encoder that maps HSV images to a feature space with hue rotation equivariance, followed by several ResNet stages that can be either fully equivariant or partially equivariant depending on the eq_blocks parameter. 
+        After the equivariant stages, a group pooling layer aggregates features over the hue rotations producing hue-invariant features by model design.
+        To use this model, the modyfied escnn library with additional hue-equivariance must be used, which is available at https://github.com/NavidadK/escnn/tree/ssl.
+        """
         # Define the rotational and flip symmetry group
         self.r2_act = gspaces.hueOnR2(N)
 
@@ -557,6 +563,7 @@ class EqResNet_hue(nn.Module):
             for c in self.feat_channels
         ]
 
+        # transforms hue channel into 2 channels representing the phase of the hue rotation
         self.encoder = enn.HSVHuePhaseEncoder(self.r2_act)
 
         # initial conv + BN + ReLU

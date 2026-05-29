@@ -315,7 +315,7 @@ class EqResNet(nn.Module):
             layer = self._make_layer_torch(torch_block, in_channels, out_channels, blocks=layers[i], stride=stride)
             self.torch_stages.append(layer)
 
-        # Pooling (in EqResnet18 vor group pooling -> nn module statt enn !!!!!)
+        # Pooling 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
         # Fully connected 
@@ -333,7 +333,6 @@ class EqResNet(nn.Module):
         layers = []
         downsample = None
 
-        # nach conv downsample fehlt norm layer (enn.InnerBatchNorm)
         if stride != 1 or in_type != out_type:
             downsample = enn.SequentialModule(
                     enn.R2Conv(in_type, out_type, kernel_size=1, stride=stride, padding=0, bias=False),# schauen, ob padding benötigt  # conv1x1(in_type, out_type, stride=stride, bias=False)
@@ -414,8 +413,6 @@ class EqResNet18(nn.Module):
                 (4, 2, 1) if eq_downsampling == "kernel_size" else (3, 1, 1)
             )
 
-
-        # input type: 3-channel RGB image
         self.in_type = enn.FieldType(self.r2_act, in_channels * [self.r2_act.trivial_repr])
 
         # feature types for each stage
@@ -425,7 +422,6 @@ class EqResNet18(nn.Module):
         self.feat512 = enn.FieldType(self.r2_act, [self.r2_act.regular_repr] * (round(512 / self.S)))
 
         # initial conv + BN + ReLU
-        #self.conv1 = conv7x7(self.in_type, self.feat64, kernel_size=7, stride=2, padding=3)
         if gaussian_blur:
             self.conv1 = enn.SequentialModule(enn.PointwiseAvgPoolAntialiased2D(self.in_type, sigma=0.33, stride=stride_s_conv1, padding=padding_s_conv1), 
                                               enn.R2Conv(self.in_type, self.feat64, kernel_size=kernel_s_conv1, stride=1, padding=3))
@@ -448,15 +444,12 @@ class EqResNet18(nn.Module):
         
         # Pooling
         self.avgpool = enn.PointwiseAdaptiveAvgPool(self.layer4.out_type, (1, 1))
-        #self.gpool = enn.GroupPooling(self.layer4.out_type) 
         self.gpool = enn.GroupPooling(self.avgpool.out_type)
 
         # Fully connected
         c = self.gpool.out_type.size
         print('Final feature dimension:', c)
-        
-        #self.fully_net =  torch.nn.Linear(c, n_classes)
-        
+                
         self.fully_net = nn.Sequential(
             nn.Linear(c, projector_hidden_size),
             # nn.BatchNorm1d(64),
@@ -473,7 +466,6 @@ class EqResNet18(nn.Module):
         else:
             kernel_size = 1
 
-        # nach conv downsample fehlt norm layer (enn.InnerBatchNorm)
         if stride != 1 or in_type != out_type:
             if gaussian_blur:
                 downsample = enn.SequentialModule(enn.PointwiseAvgPoolAntialiased2D(in_type, sigma=0.33, stride=stride, padding=1), 
@@ -504,7 +496,6 @@ class EqResNet18(nn.Module):
         x = self.layer4(x)
 
         x = self.avgpool(x)
-        # x = self.gpool(x)
 
         hidden = self.gpool(x).tensor.squeeze(-2).squeeze(-1)
         
@@ -551,9 +542,6 @@ class EqResNet_hue(nn.Module):
             kernel_s_conv1, padding_s_conv1, stride_s_conv1 = (7, 3, 2)
         else:
             kernel_s_conv1, padding_s_conv1, stride_s_conv1 = (3, 1, 1)
-
-        # # input type: 3-channel RGB image
-        # self.in_type = enn.FieldType(self.r2_act, in_channels * [self.r2_act.trivial_repr])
 
         # feature types for each stage
         self.feat_channels = [c * torch_block.expansion for c in [64, 128, 256, 512]]
@@ -603,7 +591,7 @@ class EqResNet_hue(nn.Module):
             layer = self._make_layer_torch(torch_block, in_channels, out_channels, blocks=layers[i], stride=stride)
             self.torch_stages.append(layer)
 
-        # Pooling (in EqResnet18 vor group pooling -> nn module statt enn !!!!!)
+        # Pooling 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
         # Fully connected 
@@ -621,7 +609,6 @@ class EqResNet_hue(nn.Module):
         layers = []
         downsample = None
 
-        # nach conv downsample fehlt norm layer (enn.InnerBatchNorm)
         if stride != 1 or in_type != out_type:
             downsample = enn.SequentialModule(
                     enn.R2Conv(in_type, out_type, kernel_size=1, stride=stride, padding=0, bias=False),# schauen, ob padding benötigt  # conv1x1(in_type, out_type, stride=stride, bias=False)
@@ -653,7 +640,6 @@ class EqResNet_hue(nn.Module):
         
     def forward(self, x):
         x = self.encoder(x)
-        # x = enn.GeometricTensor(x, self.in_type)
         
         # equivariant 
         for layer in self.eq_stages:
